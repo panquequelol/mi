@@ -1,4 +1,4 @@
-import type { Translations } from "../i18n/translations";
+import { type Translations } from "../i18n/translations";
 
 export function formatTimestamp(timestamp: number, t: Translations): string {
   const date = new Date(timestamp);

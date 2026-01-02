@@ -1,5 +1,5 @@
 import { useAtom, useSetAtom } from "jotai";
-import { archiveAtom, restoreSectionAtom, deleteArchiveAtom, viewModeAtom } from "../atoms/archive";
+import { archiveAtom, restoreSectionAtom, deleteArchiveAtom } from "../atoms/archive";
 import { settingsAtom } from "../atoms/settings";
 import { formatArchiveTimestamp } from "../utils/timestamp";
 import { motion, AnimatePresence } from "motion/react";
