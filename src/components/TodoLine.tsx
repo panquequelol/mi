@@ -3,6 +3,7 @@ import { useSetAtom } from "jotai";
 import { toggleLineAtom, updateLineTextAtom } from "../atoms";
 import { useEffect, useRef } from "react";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
+import { formatTimestamp } from "../utils/timestamp";
 import { motion } from "motion/react";
 
 interface TodoLineProps {
@@ -11,6 +12,7 @@ interface TodoLineProps {
   totalLines: number;
   onNavigate: (index: number, direction: "up" | "down" | "left" | "right") => void;
   onDeleteAndNavigate: (currentIndex: number) => void;
+  updatedAt: number;
 }
 
 // Escape HTML to prevent XSS - only allow @today keyword highlighting
@@ -41,7 +43,7 @@ const saveCursorPosition = (element: HTMLElement): number | null => {
   return preCaretRange.toString().length;
 };
 
-export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavigate }: TodoLineProps) => {
+export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavigate, updatedAt }: TodoLineProps) => {
   const toggleLine = useSetAtom(toggleLineAtom);
   const updateLineText = useSetAtom(updateLineTextAtom);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -184,6 +186,9 @@ export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavig
         data-placeholder="..."
         data-line-id={line.id}
       />
+      {!isEmpty && (
+        <span className="todo-timestamp">{formatTimestamp(updatedAt)}</span>
+      )}
     </div>
   );
 };
