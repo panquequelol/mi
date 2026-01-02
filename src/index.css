@@ -1,5 +1,12 @@
+@font-face {
+  font-family: 'Uncut Sans';
+  src: url('/UncutSans-Variable.ttf') format('truetype-variations');
+  font-weight: 1 999;
+  font-style: normal;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Uncut Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
