@@ -5,6 +5,8 @@
   --color-text-done: #aaa;
   --color-text-placeholder: #999;
   --color-keyword: #e11d48;
+  --color-archive-bg: #f9f9f9;
+  --color-archive-border: #eee;
 }
 
 * {
@@ -40,6 +42,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
 .todo-toggle {
@@ -69,7 +72,6 @@ body {
   font-family: inherit;
   width: 100%;
   padding: 4px 0;
-  min-height: 28px;
   text-transform: lowercase;
 }
 
@@ -90,4 +92,122 @@ body {
 
 .todo-line--empty .todo-text:empty:before {
   content: "";
+}
+
+/* Timestamp badge */
+.todo-timestamp {
+  font-size: 16px;
+  color: var(--color-text-placeholder);
+  margin-left: auto;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.todo-line:hover .todo-timestamp {
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .todo-timestamp {
+    opacity: 1;
+  }
+}
+
+/* Archive view */
+.archive-view {
+  width: 100%;
+}
+
+.archive-notice {
+  font-size: 16px;
+  text-transform: lowercase;
+  color: var(--color-text-placeholder);
+  margin: 0 0 16px 0;
+}
+
+.archive-empty {
+  color: var(--color-text-placeholder);
+  font-size: 16px;
+  text-transform: lowercase;
+}
+
+.archive-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.archive-section {
+  background: var(--color-archive-bg);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.archive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.archive-date {
+  font-size: 16px;
+  color: var(--color-text-light);
+  text-transform: lowercase;
+}
+
+.archive-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.archive-btn {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: lowercase;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.archive-btn.restore {
+  color: var(--color-text);
+}
+
+.archive-btn.restore:hover {
+  background: #e5e5e5;
+}
+
+.archive-btn.delete {
+  color: var(--color-keyword);
+}
+
+.archive-btn.delete:hover {
+  background: #fee2e2;
+}
+
+.archive-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.archive-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.archive-item-check {
+  color: var(--color-text-done);
+}
+
+.archive-item-text {
+  color: var(--color-text-done);
+  text-transform: lowercase;
 }
