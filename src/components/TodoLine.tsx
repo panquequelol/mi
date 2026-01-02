@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
 import { formatTimestamp } from "../utils/timestamp";
 import { motion } from "motion/react";
-import type { Translations } from "../i18n/translations";
+import { type Translations } from "../i18n/translations";
 
 interface TodoLineProps {
   line: TodoLineType;

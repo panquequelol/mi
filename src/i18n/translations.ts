@@ -1,6 +1,6 @@
 import type { Language } from "../orquestrator/types";
 
-type Translations = {
+export type Translations = {
   // Archive view
   archiveNotice: string;
   archiveEmpty: string;
