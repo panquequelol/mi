@@ -16,7 +16,7 @@ function AppContent() {
 function App() {
   return (
     <Provider>
-      <div className="min-h-screen px-3 mx-auto max-w-[800px] md:px-10">
+      <div className="min-h-screen px-3 py-3 mx-auto max-w-[800px] md:px-10 md:py-10">
         <AppContent />
       </div>
     </Provider>
