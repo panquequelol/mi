@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import { documentAtom, addLineAtom, deleteLineAtom } from "../atoms";
@@ -7,6 +7,7 @@ import { settingsAtom } from "../atoms/settings";
 import { TodoLine } from "./TodoLine";
 import { ArchiveView } from "./ArchiveView";
 import { setCursorOffset } from "../utils/cursor";
+import { isPhone } from "../utils/device";
 import { getSections, type Section } from "../orquestrator/sections";
 import { documentService } from "../orquestrator/document";
 import { useTranslations } from "../i18n/translations";
@@ -26,6 +27,15 @@ export const Notepad = () => {
   const prevSectionsRef = useRef<Section[]>([]);
   const archivingSectionRef = useRef<{ startIndex: number; endIndex: number } | null>(null);
   const hasAutoFocusedRef = useRef(false);
+  const [isPhoneDevice, setIsPhoneDevice] = useState(false);
+
+  // Detect phone device on mount and when window resizes
+  useEffect(() => {
+    const checkPhone = () => setIsPhoneDevice(isPhone());
+    checkPhone();
+    window.addEventListener("resize", checkPhone);
+    return () => window.removeEventListener("resize", checkPhone);
+  }, []);
 
   // Check if document is effectively empty (no visible todos)
   const hasVisibleTodos = docs.some((line) => line.text.trim());
@@ -52,6 +62,41 @@ export const Notepad = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [setViewMode]);
+
+  // "/" handler for focusing the last empty line
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if already in a contentEditable or input
+      const activeElement = document.activeElement;
+      if (
+        activeElement &&
+        (activeElement.getAttribute("contenteditable") === "true" ||
+          activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT")
+      ) {
+        return;
+      }
+
+      if (e.key === "/" && viewMode === "active") {
+        e.preventDefault();
+        // Find the last empty line
+        const lastEmptyLine = [...docs].reverse().find((line) => !line.text.trim());
+
+        if (lastEmptyLine) {
+          const element = document.querySelector(`[data-line-id="${lastEmptyLine.id}"]`) as HTMLElement;
+          element?.focus();
+        } else {
+          // No empty line, create one and focus it
+          lastLineCountRef.current = docs.length;
+          shouldFocusLastRef.current = true;
+          addLine("");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [docs, viewMode, addLine]);
 
   // Ensure document has at least one line (but don't interfere with archiving focus)
   useEffect(() => {
@@ -253,6 +298,17 @@ export const Notepad = () => {
           })}
         </AnimatePresence>
       </div>
+      {isPhoneDevice && (
+        <motion.button
+          className="settings-phone-btn"
+          onClick={() => setViewMode((m) => (m === "active" ? "archive" : "active"))}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {t.settingsHere}
+        </motion.button>
+      )}
     </div>
   );
 };

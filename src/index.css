@@ -36,18 +36,18 @@
 
 /* Text size profiles */
 [data-text-size="lsize"] {
-  --base-font-size: 18px;
-  --stroke-width: 1.8px;
+  --base-font-size: 21px;
+  --stroke-width: 1.7px;
 }
 
 [data-text-size="xlsize"] {
-  --base-font-size: 20px;
-  --stroke-width: 1.6px;
+  --base-font-size: 26px;
+  --stroke-width: 1.5px;
 }
 
 [data-text-size="xxlsize"] {
-  --base-font-size: 24px;
-  --stroke-width: 1.4px;
+  --base-font-size: 32px;
+  --stroke-width: 1.3px;
 }
 
 * {
@@ -67,6 +67,12 @@ body {
   padding: 40px;
   max-width: 800px;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 12px;
+  }
 }
 
 .notepad {
@@ -116,6 +122,9 @@ body {
   width: 100%;
   padding: 4px 0;
   text-transform: lowercase;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1.3;
 }
 
 .todo-text:empty:before {
@@ -147,7 +156,7 @@ body {
 .todo-placeholder {
   position: absolute;
   left: 0;
-  top: 0;
+  top: 4px;
   pointer-events: none;
   color: var(--color-text-placeholder);
   font-size: var(--base-font-size);
@@ -174,16 +183,64 @@ body {
   }
 }
 
+/* Settings button for phones */
+.settings-phone-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--color-archive-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--base-font-size);
+  font-family: inherit;
+  text-transform: lowercase;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.settings-phone-btn:hover {
+  background: var(--color-archive-border);
+}
+
 /* Archive view */
 .archive-view {
   width: 100%;
+}
+
+.archive-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .archive-notice {
   font-size: var(--base-font-size);
   text-transform: lowercase;
   color: var(--color-text-placeholder);
-  margin: 0 0 16px 0;
+  margin: 0;
+}
+
+.nuke-btn {
+  border: 1px solid var(--color-archive-border);
+  background: transparent;
+  font-size: var(--base-font-size);
+  font-family: inherit;
+  text-transform: lowercase;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--color-keyword);
+  border-radius: 4px;
+}
+
+.nuke-btn:hover {
+  background: var(--color-archive-border);
 }
 
 .archive-empty {
@@ -278,10 +335,6 @@ body {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
-  padding: 12px;
-  background: var(--color-archive-bg);
-  border: 1px solid var(--color-archive-border);
-  border-radius: 8px;
 }
 
 .setting-row {
@@ -381,4 +434,28 @@ body {
 .language-select:focus {
   outline: none;
   border-color: var(--color-keyword);
+}
+
+/* Archive back button for phones */
+.archive-back-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--color-archive-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--base-font-size);
+  font-family: inherit;
+  text-transform: lowercase;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  z-index: 1000;
+  border-radius: 4px;
+}
+
+.archive-back-btn:hover {
+  background: var(--color-archive-border);
 }
