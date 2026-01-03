@@ -1,40 +1,42 @@
-import { type Translations } from "../i18n/translations";
+import { differenceInMinutes, differenceInHours, differenceInDays, format, type Locale } from "date-fns";
+import { enUS, es, ja, zhCN } from "date-fns/locale";
+import type { Language } from "../orquestrator/types";
 
-// Millisecond constants for time calculations
-const MS_PER_MINUTE = 60_000;
-const MS_PER_HOUR = 3_600_000;
-const MS_PER_DAY = 86_400_000;
+const locales: Record<Language, Locale> = {
+  en: enUS,
+  es,
+  ja,
+  zh: zhCN,
+};
 
-export function formatTimestamp(timestamp: number, t: Translations): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
-  const diffHours = Math.floor(diffMs / MS_PER_HOUR);
-  const diffDays = Math.floor(diffMs / MS_PER_DAY);
+const nowTranslations: Record<Language, string> = {
+  en: "now",
+  es: "ahora",
+  ja: "今",
+  zh: "刚刚",
+};
 
-  if (diffMins < 1) return t.justNow;
-  if (diffMins < 60) return t.minsAgo(diffMins);
-  if (diffHours < 24) return t.hoursAgo(diffHours);
-  if (diffDays === 1) return t.yesterday;
-  if (diffDays < 7) return t.daysAgo(diffDays);
-
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+export function getLocale(language: Language): Locale {
+  return locales[language];
 }
 
-export function formatArchiveTimestamp(timestamp: number, t: Translations): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
-  const diffHours = Math.floor(diffMs / MS_PER_HOUR);
-  const diffDays = Math.floor(diffMs / MS_PER_DAY);
+export function formatTimestamp(timestamp: number, language: Language): string {
+  const now = Date.now();
+  const mins = differenceInMinutes(now, timestamp);
+  const hours = differenceInHours(now, timestamp);
+  const days = differenceInDays(now, timestamp);
+  const locale = locales[language];
+  const nowText = nowTranslations[language];
 
-  if (diffMins < 1) return t.archivedJustNow;
-  if (diffMins < 60) return t.archivedMinsAgo(diffMins);
-  if (diffHours < 24) return t.archivedHoursAgo(diffHours);
-  if (diffDays === 1) return t.archivedYesterday;
-  if (diffDays < 7) return t.archivedDaysAgo(diffDays);
+  if (mins < 1) return nowText;
+  if (mins < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days === 1) return "1d";
+  if (days < 7) return `${days}d`;
 
-  return `${t.archivedDaysAgoPrefix} ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  return format(timestamp, "MMM d", { locale });
+}
+
+export function formatArchiveTimestamp(timestamp: number, language: Language): string {
+  return formatTimestamp(timestamp, language);
 }

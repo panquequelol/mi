@@ -373,6 +373,7 @@ export const Notepad = () => {
                         onDeleteAndNavigate={handleDeleteAndNavigate}
                         updatedAt={line.updatedAt}
                         translations={t}
+                        language={settings.language}
                         isEmptyDocument={!hasVisibleTodos}
                         showPlaceholder={!hasVisibleTodos && index === 0}
                         isAfterLastTodo={index > actualLastNonEmptyIndex}
@@ -391,6 +392,7 @@ export const Notepad = () => {
                       onDeleteAndNavigate={handleDeleteAndNavigate}
                       updatedAt={line.updatedAt}
                       translations={t}
+                      language={settings.language}
                       isEmptyDocument={!hasVisibleTodos}
                       showPlaceholder={!hasVisibleTodos && index === 0}
                       isAfterLastTodo={index > actualLastNonEmptyIndex}

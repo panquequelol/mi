@@ -75,7 +75,7 @@ export const ArchiveView = () => {
               >
                 <div className="archive-header">
                   <span className="archive-date">
-                    {formatArchiveTimestamp(section.archivedAt, t)}
+                    {formatArchiveTimestamp(section.archivedAt, settings.language)}
                   </span>
                   <div className="archive-actions">
                     <button
