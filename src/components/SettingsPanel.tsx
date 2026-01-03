@@ -8,14 +8,15 @@ import {
   type DarkMode,
   type Language,
 } from "../atoms/settings";
-import { useTranslations, languages } from "../i18n/translations";
+import { useTranslation } from "react-i18next";
+import { languages } from "../i18n/resources";
 
 export const SettingsPanel = () => {
   const [settings] = useAtom(settingsAtom);
   const setDarkMode = useSetAtom(setDarkModeAtom);
   const setTextSize = useSetAtom(setTextSizeAtom);
   const setLanguage = useSetAtom(setLanguageAtom);
-  const t = useTranslations(settings.language);
+  const { t } = useTranslation();
 
   const handleDarkModeChange = (mode: DarkMode) => {
     setDarkMode(mode);
@@ -55,7 +56,7 @@ export const SettingsPanel = () => {
             }}
             aria-label="Light mode"
           >
-            {t.light}
+            {t("light")}
           </button>
           <button
             className={`${modeBtnBase} ${settings.darkMode === "dark" ? "active" : ""}`}
@@ -75,7 +76,7 @@ export const SettingsPanel = () => {
             }}
             aria-label="Dark mode"
           >
-            {t.dark}
+            {t("dark")}
           </button>
         </div>
       </div>
@@ -89,7 +90,7 @@ export const SettingsPanel = () => {
             color: "var(--color-text)",
           }}
         >
-          {t.size}
+          {t("size")}
         </span>
         <div className="flex gap-2">
           <button
@@ -164,7 +165,7 @@ export const SettingsPanel = () => {
             color: "var(--color-text)",
           }}
         >
-          {t.language}
+          {t("language")}
         </span>
         <select
           className="border rounded cursor-pointer px-2 py-1 lowercase transition-all duration-200 outline-none"

@@ -6,7 +6,7 @@ import { formatArchiveTimestamp } from "../utils/timestamp";
 import { isPhone } from "../utils/device";
 import { motion, AnimatePresence } from "motion/react";
 import { SettingsPanel } from "./SettingsPanel";
-import { useTranslations } from "../i18n/translations";
+import { useTranslation } from "react-i18next";
 
 export const ArchiveView = () => {
   const [archive] = useAtom(archiveAtom);
@@ -15,19 +15,27 @@ export const ArchiveView = () => {
   const clearAllArchives = useSetAtom(clearAllArchivesAtom);
   const setViewMode = useSetAtom(viewModeAtom);
   const [settings] = useAtom(settingsAtom);
-  const t = useTranslations(settings.language);
+  const { t } = useTranslation();
   const [isPhoneDevice, setIsPhoneDevice] = useState(false);
 
-  // Detect phone device on mount and when window resizes
+  // Detect phone device on mount and when window resizes (debounced)
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const checkPhone = () => setIsPhoneDevice(isPhone());
+    const debouncedCheckPhone = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkPhone, 150);
+    };
     checkPhone();
-    window.addEventListener("resize", checkPhone);
-    return () => window.removeEventListener("resize", checkPhone);
+    window.addEventListener("resize", debouncedCheckPhone);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("resize", debouncedCheckPhone);
+    };
   }, []);
 
   const handleNuke = () => {
-    if (window.confirm(t.nukeConfirm)) {
+    if (window.confirm(t("nukeConfirm"))) {
       clearAllArchives();
     }
   };
@@ -43,7 +51,7 @@ export const ArchiveView = () => {
             color: "var(--color-text-placeholder)",
           }}
         >
-          {t.archiveNotice}
+          {t("archiveNotice")}
         </p>
         {archive.length > 0 && (
           <motion.button
@@ -59,7 +67,7 @@ export const ArchiveView = () => {
             whileHover={{ background: "var(--color-archive-border)" }}
             onClick={handleNuke}
           >
-            {t.nuke}
+            {t("nuke")}
           </motion.button>
         )}
       </div>
@@ -75,7 +83,7 @@ export const ArchiveView = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {t.archiveEmpty}
+            {t("archiveEmpty")}
           </motion.p>
         ) : (
           <div className="flex flex-col gap-4">
@@ -98,7 +106,7 @@ export const ArchiveView = () => {
                       color: "var(--color-text-light)",
                     }}
                   >
-                    {formatArchiveTimestamp(section.archivedAt, t)}
+                    {formatArchiveTimestamp(section.archivedAt, settings.language)}
                   </span>
                   <div className="flex gap-2">
                     <motion.button
@@ -111,7 +119,7 @@ export const ArchiveView = () => {
                       whileHover={{ background: "#DAD8CE" }}
                       onClick={() => restore(section.id)}
                     >
-                      {t.restore}
+                      {t("restore")}
                     </motion.button>
                     <motion.button
                       className="border-none bg-transparent cursor-pointer rounded px-2 py-1 lowercase transition-colors duration-200"
@@ -123,7 +131,7 @@ export const ArchiveView = () => {
                       whileHover={{ background: "#E6D2D0" }}
                       onClick={() => deleteArchive(section.id)}
                     >
-                      {t.delete}
+                      {t("delete")}
                     </motion.button>
                   </div>
                 </div>
@@ -172,7 +180,7 @@ export const ArchiveView = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          {t.goBack}
+          {t("goBack")}
         </motion.button>
       )}
     </div>

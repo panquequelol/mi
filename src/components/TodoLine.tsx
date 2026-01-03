@@ -1,11 +1,12 @@
 import type { TodoLine as TodoLineType } from "../orquestrator";
+import type { Language } from "../orquestrator/types";
 import { useSetAtom } from "jotai";
 import { toggleLineAtom, updateLineTextAtom } from "../atoms";
 import { useEffect, useRef, memo, useCallback } from "react";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
 import { formatTimestamp } from "../utils/timestamp";
 import { motion } from "motion/react";
-import { type Translations } from "../i18n/translations";
+import type { TFunction } from "i18next";
 
 // Detect platform once at module load time
 const IS_MAC = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
@@ -17,7 +18,8 @@ interface TodoLineProps {
   onNavigate: (index: number, direction: "up" | "down" | "left" | "right") => void;
   onDeleteAndNavigate: (currentIndex: number) => void;
   updatedAt: number;
-  translations: Translations;
+  t: TFunction;
+  language: Language;
   isEmptyDocument?: boolean;
   showPlaceholder?: boolean;
   isAfterLastTodo?: boolean;
@@ -51,7 +53,7 @@ const saveCursorPosition = (element: HTMLElement): number | null => {
   return preCaretRange.toString().length;
 };
 
-export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAndNavigate, updatedAt, translations, isEmptyDocument, showPlaceholder, isAfterLastTodo = false }: TodoLineProps) => {
+export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAndNavigate, updatedAt, t, language, isEmptyDocument, showPlaceholder, isAfterLastTodo = false }: TodoLineProps) => {
   const toggleLine = useSetAtom(toggleLineAtom);
   const updateLineText = useSetAtom(updateLineTextAtom);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -219,7 +221,7 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
             textTransform: "lowercase",
           }}
         >
-          {translations.emptyHint} {IS_MAC ? "⌘ + p" : "ctrl + p"}
+          {t("emptyHint")} {IS_MAC ? "⌘ + p" : "ctrl + p"}
         </div>
       )}
       {!isEmpty && (
@@ -230,7 +232,7 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
             color: "var(--color-text-placeholder)",
           }}
         >
-          {formatTimestamp(updatedAt, translations)}
+          {formatTimestamp(updatedAt, language)}
         </span>
       )}
     </div>
@@ -242,6 +244,7 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
     prevProps.line.text === nextProps.line.text &&
     prevProps.line.state === nextProps.line.state &&
     prevProps.updatedAt === nextProps.updatedAt &&
+    prevProps.language === nextProps.language &&
     prevProps.index === nextProps.index &&
     prevProps.totalLines === nextProps.totalLines &&
     prevProps.isEmptyDocument === nextProps.isEmptyDocument &&

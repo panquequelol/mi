@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { storage } from "../orquestrator/storage";
 import type { AppSettings, Language, DarkMode, TextSizeProfile } from "../orquestrator/types";
+import { changeLanguage as changeI18nLanguage } from "../i18n/i18n";
 
 export type { DarkMode, TextSizeProfile, Language } from "../orquestrator/types";
 
@@ -18,13 +19,6 @@ export const setDarkModeAtom = atom(
     const updated = { ...current, darkMode };
     set(settingsAtom, updated);
     storage.setSettings(updated);
-
-    // Apply data attribute to document
-    if (darkMode === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
   }
 );
 
@@ -36,13 +30,6 @@ export const setTextSizeAtom = atom(
     const updated = { ...current, textSize };
     set(settingsAtom, updated);
     storage.setSettings(updated);
-
-    // Apply data attribute to document
-    if (textSize !== "normal") {
-      document.documentElement.setAttribute("data-text-size", textSize);
-    } else {
-      document.documentElement.removeAttribute("data-text-size");
-    }
   }
 );
 
@@ -57,6 +44,9 @@ export const setLanguageAtom = atom(
 
     // Set lang attribute on document
     document.documentElement.lang = language;
+
+    // Sync with i18next
+    changeI18nLanguage(language);
   }
 );
 
@@ -76,7 +66,8 @@ export const initializeSettingsAtom = atom(
       document.documentElement.setAttribute("data-text-size", settings.textSize);
     }
 
-    // Set lang attribute
+    // Set lang attribute and sync with i18next
     document.documentElement.lang = settings.language;
+    changeI18nLanguage(settings.language);
   }
 );
