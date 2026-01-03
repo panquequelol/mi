@@ -9,6 +9,8 @@ export type TodoLine = {
 
 export type NotepadDocument = TodoLine[];
 
+// Legacy storage key name preserved for backward compatibility with existing user data
+// Project was originally called "nairobi-notepad" before being renamed to "Tripoli"
 export const STORAGE_KEY = "nairobi-notepad";
 
 export type ArchivedSection = {
@@ -19,6 +21,7 @@ export type ArchivedSection = {
 
 export type ArchivedSections = ArchivedSection[];
 
+// Legacy storage key name preserved for backward compatibility
 export const ARCHIVE_STORAGE_KEY = "nairobi-notepad-archive";
 
 export type DarkMode = "light" | "dark";
@@ -31,4 +34,5 @@ export type AppSettings = {
   language: Language;
 };
 
+// Legacy storage key name preserved for backward compatibility
 export const SETTINGS_STORAGE_KEY = "nairobi-notepad-settings";

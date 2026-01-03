@@ -5,7 +5,7 @@ import { STORAGE_KEY, ARCHIVE_STORAGE_KEY, SETTINGS_STORAGE_KEY, type NotepadDoc
 const ls = new SecureLS({ encodingType: "aes" });
 
 // Simple debounce implementation (no external dependency)
-function debounce<T extends (...args: any[]) => void>(func: T, wait: number): T {
+function debounce<T extends (...args: never[]) => void>(func: T, wait: number): T {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   return ((...args: Parameters<T>) => {
     if (timeoutId) clearTimeout(timeoutId);
@@ -55,14 +55,23 @@ export const storage = {
   },
 
   setArchive: (archive: ArchivedSections): void => {
-    ls.set(ARCHIVE_STORAGE_KEY, JSON.stringify(archive));
+    try {
+      ls.set(ARCHIVE_STORAGE_KEY, JSON.stringify(archive));
+    } catch (error) {
+      console.error("Failed to save archive:", error);
+    }
   },
 
   addToArchive: (section: ArchivedSection): ArchivedSections => {
-    const current = storage.getArchive();
-    const updated = [section, ...current];
-    storage.setArchive(updated);
-    return updated;
+    try {
+      const current = storage.getArchive();
+      const updated = [section, ...current];
+      storage.setArchive(updated);
+      return updated;
+    } catch (error) {
+      console.error("Failed to add to archive:", error);
+      return storage.getArchive();
+    }
   },
 
   updateArchive: (archive: ArchivedSections): void => {
@@ -102,6 +111,10 @@ export const storage = {
   },
 
   setSettings: (settings: AppSettings): void => {
-    ls.set(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    try {
+      ls.set(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+    }
   },
 };

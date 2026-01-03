@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Language } from "../orquestrator/types";
 
 export type Translations = {
@@ -107,7 +108,7 @@ export const translations: Record<Language, Translations> = {
 };
 
 export const useTranslations = (language: Language): Translations => {
-  return translations[language];
+  return useMemo(() => translations[language], [language]);
 };
 
 // Language metadata for display
