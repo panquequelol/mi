@@ -18,13 +18,6 @@ export const setDarkModeAtom = atom(
     const updated = { ...current, darkMode };
     set(settingsAtom, updated);
     storage.setSettings(updated);
-
-    // Apply data attribute to document
-    if (darkMode === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
   }
 );
 
@@ -36,13 +29,6 @@ export const setTextSizeAtom = atom(
     const updated = { ...current, textSize };
     set(settingsAtom, updated);
     storage.setSettings(updated);
-
-    // Apply data attribute to document
-    if (textSize !== "normal") {
-      document.documentElement.setAttribute("data-text-size", textSize);
-    } else {
-      document.documentElement.removeAttribute("data-text-size");
-    }
   }
 );
 
@@ -54,9 +40,6 @@ export const setLanguageAtom = atom(
     const updated = { ...current, language };
     set(settingsAtom, updated);
     storage.setSettings(updated);
-
-    // Set lang attribute on document
-    document.documentElement.lang = language;
   }
 );
 

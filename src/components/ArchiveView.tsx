@@ -18,12 +18,20 @@ export const ArchiveView = () => {
   const t = useTranslations(settings.language);
   const [isPhoneDevice, setIsPhoneDevice] = useState(false);
 
-  // Detect phone device on mount and when window resizes
+  // Detect phone device on mount and when window resizes (debounced)
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const checkPhone = () => setIsPhoneDevice(isPhone());
+    const debouncedCheckPhone = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkPhone, 150);
+    };
     checkPhone();
-    window.addEventListener("resize", checkPhone);
-    return () => window.removeEventListener("resize", checkPhone);
+    window.addEventListener("resize", debouncedCheckPhone);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("resize", debouncedCheckPhone);
+    };
   }, []);
 
   const handleNuke = () => {

@@ -211,6 +211,7 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
     prevProps.line.text === nextProps.line.text &&
     prevProps.line.state === nextProps.line.state &&
     prevProps.updatedAt === nextProps.updatedAt &&
+    prevProps.translations === nextProps.translations &&
     prevProps.index === nextProps.index &&
     prevProps.totalLines === nextProps.totalLines &&
     prevProps.isEmptyDocument === nextProps.isEmptyDocument &&
