@@ -16,10 +16,10 @@ import { storage } from "../orquestrator/storage";
 export const Notepad = () => {
   const [docs] = useAtom(documentAtom);
   const setDocument = useSetAtom(documentAtom);
-  const [_, addLine] = useAtom(addLineAtom);
-  const [__, insertLineAfter] = useAtom(insertLineAfterAtom);
-  const [___, insertLineBefore] = useAtom(insertLineBeforeAtom);
-  const [____, splitLine] = useAtom(splitLineAtom);
+  const addLine = useSetAtom(addLineAtom);
+  const insertLineAfter = useSetAtom(insertLineAfterAtom);
+  const insertLineBefore = useSetAtom(insertLineBeforeAtom);
+  const splitLine = useSetAtom(splitLineAtom);
   const deleteLine = useSetAtom(deleteLineAtom);
   const archiveSection = useSetAtom(archiveSectionAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
@@ -30,21 +30,29 @@ export const Notepad = () => {
   const pendingFocusRef = useRef<{ lineId: string | null; offset: number }>({ lineId: null, offset: 0 });
   const newLineToFocusRef = useRef<string | null>(null);
   const prevSectionsRef = useRef<Section[]>([]);
-  const archivingSectionRef = useRef<{ startIndex: number; endIndex: number } | null>(null);
   const hasAutoFocusedRef = useRef(false);
   const [isPhoneDevice, setIsPhoneDevice] = useState(false);
-  const [, forceUpdate] = useState({}); // Used to force re-render when archiving starts
+  const onAnimationCompleteRef = useRef<(() => void) | null>(null);
+  const [archivingSection, setArchivingSection] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   // Ref for docs that doesn't cause re-renders when accessed
   const docsRef = useRef(docs);
   useEffect(() => { docsRef.current = docs; }, [docs]);
 
-  // Detect phone device on mount and when window resizes
+  // Detect phone device on mount and when window resizes (debounced)
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const checkPhone = () => setIsPhoneDevice(isPhone());
+    const debouncedCheckPhone = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkPhone, 150);
+    };
     checkPhone();
-    window.addEventListener("resize", checkPhone);
-    return () => window.removeEventListener("resize", checkPhone);
+    window.addEventListener("resize", debouncedCheckPhone);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      window.removeEventListener("resize", debouncedCheckPhone);
+    };
   }, []);
 
   // Memoize expensive computations
@@ -79,8 +87,8 @@ export const Notepad = () => {
       }
     };
     window.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true } as any);
-  }, []); // setViewMode from jotai is stable, no need for dependency
+    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true } as EventListenerOptions);
+  }, [setViewMode]);
 
   // "/" handler for focusing the last empty line
   useEffect(() => {
@@ -117,7 +125,7 @@ export const Notepad = () => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [viewMode, addLine]);
+  }, [viewMode, addLine, docsRef]);
 
   // Ensure document has at least one line (but don't interfere with archiving focus)
   useEffect(() => {
@@ -145,6 +153,7 @@ export const Notepad = () => {
       return () => clearTimeout(timeoutId);
     }
     lastLineCountRef.current = docs.length;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only care about length changes, not individual doc changes
   }, [docs.length]);
 
   // Handle pending focus after deletion (runs after re-render)
@@ -183,7 +192,7 @@ export const Notepad = () => {
 
   // Check for completed sections and trigger archive
   useEffect(() => {
-    if (archivingSectionRef.current) return;
+    if (archivingSection !== null) return;
 
     const currentSections = getSections(docs);
 
@@ -198,54 +207,50 @@ export const Notepad = () => {
       const section = newlyComplete[0];
       const { startIndex: archivedStartIndex, endIndex: archivedEndIndex } = section;
 
-      // Mark section for archiving
-      archivingSectionRef.current = { startIndex: archivedStartIndex, endIndex: archivedEndIndex };
+      // Mark section for archiving (triggers exit animation)
+      setArchivingSection({ startIndex: archivedStartIndex, endIndex: archivedEndIndex });
 
-      // Force re-render to show exit animation
-      forceUpdate({});
-
-      // Wait for animation to complete, then archive
-      // Use double RAF to ensure React has committed and animation has started
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            if (!archivingSectionRef.current) return;
-
-            // Actually archive the section
-            archiveSection({
-              startIndex: archivedStartIndex,
-              endIndex: archivedEndIndex,
-            });
-            archivingSectionRef.current = null;
-
-            // Cleanup: remove empty line and add new one
-            setTimeout(() => {
-              const currentDoc = documentService.load();
-              const emptyLineIndex = archivedStartIndex;
-
-              if (emptyLineIndex < currentDoc.length) {
-                const lineAfterArchived = currentDoc[emptyLineIndex];
-                if (lineAfterArchived && !lineAfterArchived.text.trim()) {
-                  const cleaned = [
-                    ...currentDoc.slice(0, emptyLineIndex),
-                    ...currentDoc.slice(emptyLineIndex + 1),
-                  ];
-                  storage.setSync(cleaned);
-                  setDocument(cleaned);
-                }
-              }
-
-              const finalDoc = documentService.load();
-              lastLineCountRef.current = finalDoc.length;
-              shouldFocusLastRef.current = true;
-              addLine("");
-            }, 0);
-          }, 350); // Slightly longer than animation duration (300ms)
+      // Perform the actual archiving after animation completes
+      // Using setTimeout to match animation duration (300ms)
+      const timeoutId = setTimeout(() => {
+        // Actually archive the section
+        archiveSection({
+          startIndex: archivedStartIndex,
+          endIndex: archivedEndIndex,
         });
-      });
+        setArchivingSection(null);
+        onAnimationCompleteRef.current = null;
+
+        // Cleanup: remove empty line and add new one
+        const currentDoc = documentService.load();
+        const emptyLineIndex = archivedStartIndex;
+
+        if (emptyLineIndex < currentDoc.length) {
+          const lineAfterArchived = currentDoc[emptyLineIndex];
+          if (lineAfterArchived && !lineAfterArchived.text.trim()) {
+            const cleaned = [
+              ...currentDoc.slice(0, emptyLineIndex),
+              ...currentDoc.slice(emptyLineIndex + 1),
+            ];
+            storage.setSync(cleaned);
+            setDocument(cleaned);
+          }
+        }
+
+        const finalDoc = documentService.load();
+        lastLineCountRef.current = finalDoc.length;
+        shouldFocusLastRef.current = true;
+        addLine("");
+      }, 350); // Slightly longer than animation duration (300ms)
+
+      // Store timeout ID for cleanup if component unmounts
+      onAnimationCompleteRef.current = () => clearTimeout(timeoutId);
+
+      return () => clearTimeout(timeoutId);
     }
 
     prevSectionsRef.current = currentSections;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- archivingSection intentionally omitted to prevent timeout from being cleared when state changes
   }, [docs, archiveSection, setDocument, addLine]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -349,9 +354,9 @@ export const Notepad = () => {
           <div className="todo-lines">
             <AnimatePresence>
               {docs.map((line, index) => {
-                const isBeingArchived = archivingSectionRef.current &&
-                  index >= archivingSectionRef.current.startIndex &&
-                  index < archivingSectionRef.current.endIndex;
+                const isBeingArchived = archivingSection !== null &&
+                  index >= archivingSection.startIndex &&
+                  index < archivingSection.endIndex;
 
                 if (isBeingArchived) {
                   return (
