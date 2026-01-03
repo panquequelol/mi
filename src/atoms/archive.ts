@@ -77,3 +77,11 @@ export const deleteArchiveAtom = atom(
     storage.setArchive(updated);
   }
 );
+
+export const clearAllArchivesAtom = atom(
+  null,
+  (_get, set) => {
+    set(archiveAtom, []);
+    storage.setArchive([]);
+  }
+);

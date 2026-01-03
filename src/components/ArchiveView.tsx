@@ -1,7 +1,9 @@
 import { useAtom, useSetAtom } from "jotai";
-import { archiveAtom, restoreSectionAtom, deleteArchiveAtom } from "../atoms/archive";
+import { useState, useEffect } from "react";
+import { archiveAtom, restoreSectionAtom, deleteArchiveAtom, clearAllArchivesAtom, viewModeAtom } from "../atoms/archive";
 import { settingsAtom } from "../atoms/settings";
 import { formatArchiveTimestamp } from "../utils/timestamp";
+import { isPhone } from "../utils/device";
 import { motion, AnimatePresence } from "motion/react";
 import { SettingsPanel } from "./SettingsPanel";
 import { useTranslations } from "../i18n/translations";
@@ -10,13 +12,37 @@ export const ArchiveView = () => {
   const [archive] = useAtom(archiveAtom);
   const restore = useSetAtom(restoreSectionAtom);
   const deleteArchive = useSetAtom(deleteArchiveAtom);
+  const clearAllArchives = useSetAtom(clearAllArchivesAtom);
+  const setViewMode = useSetAtom(viewModeAtom);
   const [settings] = useAtom(settingsAtom);
   const t = useTranslations(settings.language);
+  const [isPhoneDevice, setIsPhoneDevice] = useState(false);
+
+  // Detect phone device on mount and when window resizes
+  useEffect(() => {
+    const checkPhone = () => setIsPhoneDevice(isPhone());
+    checkPhone();
+    window.addEventListener("resize", checkPhone);
+    return () => window.removeEventListener("resize", checkPhone);
+  }, []);
+
+  const handleNuke = () => {
+    if (window.confirm(t.nukeConfirm)) {
+      clearAllArchives();
+    }
+  };
 
   return (
     <div className="archive-view">
       <SettingsPanel />
-      <p className="archive-notice">{t.archiveNotice}</p>
+      <div className="archive-header-row">
+        <p className="archive-notice">{t.archiveNotice}</p>
+        {archive.length > 0 && (
+          <button className="nuke-btn" onClick={handleNuke}>
+            {t.nuke}
+          </button>
+        )}
+      </div>
       <AnimatePresence mode="popLayout">
         {archive.length === 0 ? (
           <motion.p
@@ -71,6 +97,17 @@ export const ArchiveView = () => {
           </div>
         )}
       </AnimatePresence>
+      {isPhoneDevice && (
+        <motion.button
+          className="archive-back-btn"
+          onClick={() => setViewMode("active")}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {t.goBack}
+        </motion.button>
+      )}
     </div>
   );
 };
