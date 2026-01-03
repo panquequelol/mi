@@ -214,7 +214,7 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
       />
       {showPlaceholder && !line.text && (
         <div
-          className="absolute left-0 top-1 pointer-events-none"
+          className="absolute left-0 top-1 pointer-events-none select-none"
           style={{
             color: "var(--color-text-placeholder)",
             fontSize: "var(--base-font-size)",
