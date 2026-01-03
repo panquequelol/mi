@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
-import { documentAtom, addLineAtom, deleteLineAtom } from "../atoms";
+import { documentAtom, addLineAtom, deleteLineAtom, insertLineAfterAtom } from "../atoms";
 import { archiveSectionAtom, viewModeAtom } from "../atoms/archive";
 import { settingsAtom } from "../atoms/settings";
 import { TodoLine } from "./TodoLine";
@@ -16,6 +16,7 @@ export const Notepad = () => {
   const [docs] = useAtom(documentAtom);
   const setDocument = useSetAtom(documentAtom);
   const [_, addLine] = useAtom(addLineAtom);
+  const [__, insertLineAfter] = useAtom(insertLineAfterAtom);
   const deleteLine = useSetAtom(deleteLineAtom);
   const archiveSection = useSetAtom(archiveSectionAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
@@ -24,6 +25,7 @@ export const Notepad = () => {
   const lastLineCountRef = useRef(0);
   const shouldFocusLastRef = useRef(false);
   const pendingFocusRef = useRef<{ lineId: string | null; offset: number }>({ lineId: null, offset: 0 });
+  const newLineToFocusRef = useRef<string | null>(null);
   const prevSectionsRef = useRef<Section[]>([]);
   const archivingSectionRef = useRef<{ startIndex: number; endIndex: number } | null>(null);
   const hasAutoFocusedRef = useRef(false);
@@ -142,6 +144,23 @@ export const Notepad = () => {
     }
   }, [docs]);
 
+  // Focus the newly created line after Enter is pressed
+  useEffect(() => {
+    if (newLineToFocusRef.current) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const element = document.querySelector(
+            `[data-line-id="${newLineToFocusRef.current}"]`
+          ) as HTMLElement;
+          if (element) {
+            element.focus();
+          }
+          newLineToFocusRef.current = null;
+        });
+      });
+    }
+  }, [docs]);
+
   // Check for completed sections and trigger archive
   useEffect(() => {
     if (archivingSectionRef.current) return;
@@ -217,9 +236,25 @@ export const Notepad = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      lastLineCountRef.current = docs.length;
-      shouldFocusLastRef.current = true;
-      addLine();
+
+      // Find the currently focused line
+      const activeElement = document.activeElement as HTMLElement;
+      const focusedLineId = activeElement?.getAttribute("data-line-id");
+
+      if (focusedLineId) {
+        // Insert a new line after the currently focused line
+        const updated = insertLineAfter(focusedLineId, "");
+        // Find the newly created line (it's the one after the focused line)
+        const focusedIndex = docs.findIndex((line) => line.id === focusedLineId);
+        if (focusedIndex !== -1 && updated[focusedIndex + 1]) {
+          newLineToFocusRef.current = updated[focusedIndex + 1].id;
+        }
+      } else {
+        // Fallback: no line is focused, add at the end
+        lastLineCountRef.current = docs.length;
+        shouldFocusLastRef.current = true;
+        addLine();
+      }
     }
   };
 
@@ -270,6 +305,10 @@ export const Notepad = () => {
     return index >= startIndex && index < endIndex;
   };
 
+  // Find the index of the last non-empty line (for showing indicators on trailing empty lines)
+  const lastNonEmptyIndex = docs.map((line) => line.text.trim()).reverse().findIndex(Boolean);
+  const actualLastNonEmptyIndex = lastNonEmptyIndex === -1 ? -1 : docs.length - 1 - lastNonEmptyIndex;
+
   return (
     <div className="notepad" onKeyDown={handleKeyDown}>
       <div className="todo-lines">
@@ -292,6 +331,7 @@ export const Notepad = () => {
                   translations={t}
                   isEmptyDocument={!hasVisibleTodos}
                   showPlaceholder={!hasVisibleTodos && index === 0}
+                  isAfterLastTodo={index > actualLastNonEmptyIndex}
                 />
               </motion.div>
             );

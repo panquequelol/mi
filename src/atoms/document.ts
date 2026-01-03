@@ -36,6 +36,17 @@ export const addLineAtom = atom(
   }
 );
 
+export const insertLineAfterAtom = atom(
+  null,
+  (get, set, afterLineId: string, text: string = "") => {
+    const current = get(documentAtom);
+    const updated = documentService.insertLineAfter(current, afterLineId, text);
+    set(documentAtom, updated);
+    documentService.save(updated);
+    return updated;
+  }
+);
+
 export const deleteLineAtom = atom(
   null,
   (get, set, lineId: string) => {

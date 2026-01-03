@@ -17,6 +17,7 @@ interface TodoLineProps {
   translations: Translations;
   isEmptyDocument?: boolean;
   showPlaceholder?: boolean;
+  isAfterLastTodo?: boolean;
 }
 
 // Escape HTML to prevent XSS - only allow @today keyword highlighting
@@ -47,7 +48,7 @@ const saveCursorPosition = (element: HTMLElement): number | null => {
   return preCaretRange.toString().length;
 };
 
-export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavigate, updatedAt, translations, isEmptyDocument, showPlaceholder }: TodoLineProps) => {
+export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavigate, updatedAt, translations, isEmptyDocument, showPlaceholder, isAfterLastTodo = false }: TodoLineProps) => {
   const toggleLine = useSetAtom(toggleLineAtom);
   const updateLineText = useSetAtom(updateLineTextAtom);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -135,7 +136,7 @@ export const TodoLine = ({ line, index, totalLines, onNavigate, onDeleteAndNavig
   }, [line.text]);
 
   return (
-    <div className={`todo-line ${isEmpty ? "todo-line--empty" : ""}`} data-state={line.state} data-empty-document={isEmptyDocument ? "true" : "false"}>
+    <div className={`todo-line ${isEmpty ? "todo-line--empty" : ""} ${isAfterLastTodo && isEmpty && !showPlaceholder ? "todo-line--trailing" : ""}`} data-state={line.state} data-empty-document={isEmptyDocument ? "true" : "false"}>
       {!isEmpty && (
         <motion.div
           className="todo-toggle"

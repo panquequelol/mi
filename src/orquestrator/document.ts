@@ -38,6 +38,32 @@ export const documentService = {
     return [...document, newLine];
   },
 
+  insertLineAfter: (
+    document: NotepadDocument,
+    afterLineId: string,
+    text: string = ""
+  ): NotepadDocument => {
+    const index = document.findIndex((line) => line.id === afterLineId);
+    if (index === -1) {
+      // Line not found, append at the end
+      return documentService.addLine(document, text);
+    }
+
+    const newLine: TodoLine = {
+      id: crypto.randomUUID(),
+      text,
+      state: "TODO",
+      updatedAt: Date.now(),
+    };
+
+    // Insert after the found line
+    return [
+      ...document.slice(0, index + 1),
+      newLine,
+      ...document.slice(index + 1),
+    ];
+  },
+
   deleteLine: (document: NotepadDocument, lineId: string): NotepadDocument => {
     return document.filter((line) => line.id !== lineId);
   },
