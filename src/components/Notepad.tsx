@@ -10,7 +10,7 @@ import { getCursorOffset, setCursorOffset } from "../utils/cursor";
 import { isPhone } from "../utils/device";
 import { getSections, type Section } from "../orquestrator/sections";
 import { documentService } from "../orquestrator/document";
-import { useTranslations } from "../i18n/translations";
+import { useTranslation } from "react-i18next";
 import { storage } from "../orquestrator/storage";
 
 export const Notepad = () => {
@@ -24,7 +24,7 @@ export const Notepad = () => {
   const archiveSection = useSetAtom(archiveSectionAtom);
   const [viewMode, setViewMode] = useAtom(viewModeAtom);
   const [settings] = useAtom(settingsAtom);
-  const t = useTranslations(settings.language);
+  const { t } = useTranslation();
   const lastLineCountRef = useRef(0);
   const shouldFocusLastRef = useRef(false);
   const pendingFocusRef = useRef<{ lineId: string | null; offset: number }>({ lineId: null, offset: 0 });
@@ -367,7 +367,7 @@ export const Notepad = () => {
                         onNavigate={handleNavigate}
                         onDeleteAndNavigate={handleDeleteAndNavigate}
                         updatedAt={line.updatedAt}
-                        translations={t}
+                        t={t}
                         language={settings.language}
                         isEmptyDocument={!hasVisibleTodos}
                         showPlaceholder={!hasVisibleTodos && index === 0}
@@ -386,7 +386,7 @@ export const Notepad = () => {
                       onNavigate={handleNavigate}
                       onDeleteAndNavigate={handleDeleteAndNavigate}
                       updatedAt={line.updatedAt}
-                      translations={t}
+                      t={t}
                       language={settings.language}
                       isEmptyDocument={!hasVisibleTodos}
                       showPlaceholder={!hasVisibleTodos && index === 0}
@@ -405,7 +405,7 @@ export const Notepad = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {t.settingsHere}
+              {t("settingsHere")}
             </motion.button>
           )}
         </>
