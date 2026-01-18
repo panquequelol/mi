@@ -8,6 +8,7 @@ import { TodoLine } from "./TodoLine";
 import { ArchiveView } from "./ArchiveView";
 import { CommandPalette } from "./CommandPalette";
 import { ContextMenuTrigger } from "./ContextMenu";
+import { CheckboxWithContext } from "./CheckboxWithContext";
 import { commandPaletteOpenAtom, commandsAtom, type Command } from "../atoms/commandPalette";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
 import { isPhone } from "../utils/device";
@@ -539,59 +540,13 @@ export const Notepad = () => {
                         onDeleteAndNavigate={handleDeleteAndNavigate}
                         onMoveLine={handleMoveLine}
                         checkboxAction={
-                          <ContextMenuTrigger lineId={line.id} onDelete={handleContextMenuDelete} t={t}>
-                            <motion.div
-                              className="cursor-pointer select-none min-w-[calc(var(--base-font-size)*1.25)] inline-flex items-center justify-center"
-                              style={{ color: "var(--color-text-light)" }}
-                              onClick={() => toggleLine(line.id)}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                                className="block"
-                                style={{ width: "calc(var(--base-font-size)*1.25)", height: "calc(var(--base-font-size)*1.25)" }}
-                              >
-                                <motion.rect
-                                  x="2"
-                                  y="2"
-                                  width="16"
-                                  height="16"
-                                  rx="3"
-                                  stroke="var(--color-text-done)"
-                                  strokeWidth="var(--stroke-width)"
-                                  initial={false}
-                                  transition={{ duration: 0.3 }}
-                                />
-                                <motion.g
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{
-                                    scale: line.state === "DONE" ? 1 : 0,
-                                    opacity: line.state === "DONE" ? 1 : 0,
-                                  }}
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 200,
-                                    damping: 12,
-                                    delay: line.state === "DONE" ? 0.05 : 0,
-                                  }}
-                                  style={{ transformOrigin: "10px 10px" }}
-                                >
-                                  <path
-                                    d="M6 10 L9 13 L14 7"
-                                    stroke="var(--color-text-done)"
-                                    strokeWidth="var(--stroke-width)"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    fill="none"
-                                  />
-                                </motion.g>
-                              </svg>
-                            </motion.div>
-                          </ContextMenuTrigger>
+                          <CheckboxWithContext
+                            lineId={line.id}
+                            state={line.state}
+                            onToggle={toggleLine}
+                            onDelete={handleContextMenuDelete}
+                            t={t}
+                          />
                         }
                         t={t}
                         isEmptyDocument={!hasVisibleTodos}
@@ -618,59 +573,13 @@ export const Notepad = () => {
                         onDeleteAndNavigate={handleDeleteAndNavigate}
                         onMoveLine={handleMoveLine}
                         checkboxAction={
-                          <ContextMenuTrigger lineId={line.id} onDelete={handleContextMenuDelete} t={t}>
-                            <motion.div
-                              className="cursor-pointer select-none min-w-[calc(var(--base-font-size)*1.25)] inline-flex items-center justify-center"
-                              style={{ color: "var(--color-text-light)" }}
-                              onClick={() => toggleLine(line.id)}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                                className="block"
-                                style={{ width: "calc(var(--base-font-size)*1.25)", height: "calc(var(--base-font-size)*1.25)" }}
-                              >
-                                <motion.rect
-                                  x="2"
-                                  y="2"
-                                  width="16"
-                                  height="16"
-                                  rx="3"
-                                  stroke="var(--color-text-done)"
-                                  strokeWidth="var(--stroke-width)"
-                                  initial={false}
-                                  transition={{ duration: 0.3 }}
-                                />
-                                <motion.g
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{
-                                    scale: line.state === "DONE" ? 1 : 0,
-                                    opacity: line.state === "DONE" ? 1 : 0,
-                                  }}
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 200,
-                                    damping: 12,
-                                    delay: line.state === "DONE" ? 0.05 : 0,
-                                  }}
-                                  style={{ transformOrigin: "10px 10px" }}
-                                >
-                                  <path
-                                    d="M6 10 L9 13 L14 7"
-                                    stroke="var(--color-text-done)"
-                                    strokeWidth="var(--stroke-width)"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    fill="none"
-                                  />
-                                </motion.g>
-                              </svg>
-                            </motion.div>
-                          </ContextMenuTrigger>
+                          <CheckboxWithContext
+                            lineId={line.id}
+                            state={line.state}
+                            onToggle={toggleLine}
+                            onDelete={handleContextMenuDelete}
+                            t={t}
+                          />
                         }
                         t={t}
                         isEmptyDocument={!hasVisibleTodos}
