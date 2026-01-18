@@ -1,10 +1,8 @@
 import type { TodoLine as TodoLineType } from "../orquestrator";
-import type { Language } from "../orquestrator/types";
 import { useSetAtom } from "jotai";
 import { toggleLineAtom, updateLineTextAtom } from "../atoms";
-import { useEffect, useRef, memo, useCallback } from "react";
+import { useEffect, useRef, memo, useCallback, type ReactNode } from "react";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
-import { formatTimestamp } from "../utils/timestamp";
 import { motion } from "motion/react";
 import type { TFunction } from "i18next";
 
@@ -18,9 +16,8 @@ interface TodoLineProps {
   onNavigate: (index: number, direction: "up" | "down" | "left" | "right") => void;
   onDeleteAndNavigate: (currentIndex: number) => void;
   onMoveLine?: (lineId: string, direction: "up" | "down") => void;
-  updatedAt: number;
+  checkboxAction?: ReactNode;
   t: TFunction;
-  language: Language;
   isEmptyDocument?: boolean;
   showPlaceholder?: boolean;
   isAfterLastTodo?: boolean;
@@ -54,7 +51,7 @@ const saveCursorPosition = (element: HTMLElement): number | null => {
   return preCaretRange.toString().length;
 };
 
-export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAndNavigate, onMoveLine, updatedAt, t, language, isEmptyDocument, showPlaceholder, isAfterLastTodo = false }: TodoLineProps) => {
+export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAndNavigate, onMoveLine, checkboxAction, t, isEmptyDocument, showPlaceholder, isAfterLastTodo = false }: TodoLineProps) => {
   const toggleLine = useSetAtom(toggleLineAtom);
   const updateLineText = useSetAtom(updateLineTextAtom);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -153,61 +150,65 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
   }, [line.text]);
 
   return (
-    <div className={`flex items-center gap-2 relative ${isEmpty ? "" : "min-h-[16px]"}`} data-state={line.state} data-empty-document={isEmptyDocument ? "true" : "false"}>
+    <div className={`flex items-center gap-2 relative group ${isEmpty ? "" : "min-h-[16px]"}`} data-state={line.state} data-empty-document={isEmptyDocument ? "true" : "false"}>
       {!isEmpty && (
-        <motion.div
-          className="cursor-pointer select-none min-w-[calc(var(--base-font-size)*1.25)] inline-flex items-center justify-center"
-          style={{ color: "var(--color-text-light)" }}
-          onClick={handleToggle}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="block"
-            style={{ width: "calc(var(--base-font-size)*1.25)", height: "calc(var(--base-font-size)*1.25)" }}
+        checkboxAction ? (
+          checkboxAction
+        ) : (
+          <motion.div
+            className="cursor-pointer select-none min-w-[calc(var(--base-font-size)*1.25)] inline-flex items-center justify-center"
+            style={{ color: "var(--color-text-light)" }}
+            onClick={handleToggle}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            {/* Box */}
-            <motion.rect
-              x="2"
-              y="2"
-              width="16"
-              height="16"
-              rx="3"
-              stroke="var(--color-text-done)"
-              strokeWidth="var(--stroke-width)"
-              initial={false}
-              transition={{ duration: 0.3 }}
-            />
-            {/* Checkmark - animates in with scale */}
-            <motion.g
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: line.state === "DONE" ? 1 : 0,
-                opacity: line.state === "DONE" ? 1 : 0,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 200,
-                damping: 12,
-                delay: line.state === "DONE" ? 0.05 : 0,
-              }}
-              style={{ transformOrigin: "10px 10px" }}
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              className="block"
+              style={{ width: "calc(var(--base-font-size)*1.25)", height: "calc(var(--base-font-size)*1.25)" }}
             >
-              <path
-                d="M6 10 L9 13 L14 7"
+              {/* Box */}
+              <motion.rect
+                x="2"
+                y="2"
+                width="16"
+                height="16"
+                rx="3"
                 stroke="var(--color-text-done)"
                 strokeWidth="var(--stroke-width)"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
+                initial={false}
+                transition={{ duration: 0.3 }}
               />
-            </motion.g>
-          </svg>
-        </motion.div>
+              {/* Checkmark - animates in with scale */}
+              <motion.g
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: line.state === "DONE" ? 1 : 0,
+                  opacity: line.state === "DONE" ? 1 : 0,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 12,
+                  delay: line.state === "DONE" ? 0.05 : 0,
+                }}
+                style={{ transformOrigin: "10px 10px" }}
+              >
+                <path
+                  d="M6 10 L9 13 L14 7"
+                  stroke="var(--color-text-done)"
+                  strokeWidth="var(--stroke-width)"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </motion.g>
+            </svg>
+          </motion.div>
+        )
       )}
       <div
         ref={editorRef}
@@ -239,17 +240,6 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
           {t("emptyHint")} {IS_MAC ? t("commandShortcutMac") : t("commandShortcutWin")}
         </div>
       )}
-      {!isEmpty && (
-        <span
-          className="ml-auto whitespace-nowrap opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity duration-200"
-          style={{
-            fontSize: "var(--base-font-size)",
-            color: "var(--color-text-placeholder)",
-          }}
-        >
-          {formatTimestamp(updatedAt, language)}
-        </span>
-      )}
     </div>
   );
 }, (prevProps, nextProps) => {
@@ -258,13 +248,12 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
     prevProps.line.id === nextProps.line.id &&
     prevProps.line.text === nextProps.line.text &&
     prevProps.line.state === nextProps.line.state &&
-    prevProps.updatedAt === nextProps.updatedAt &&
-    prevProps.language === nextProps.language &&
     prevProps.index === nextProps.index &&
     prevProps.totalLines === nextProps.totalLines &&
     prevProps.isEmptyDocument === nextProps.isEmptyDocument &&
     prevProps.showPlaceholder === nextProps.showPlaceholder &&
     prevProps.isAfterLastTodo === nextProps.isAfterLastTodo &&
-    prevProps.onMoveLine === nextProps.onMoveLine
+    prevProps.onMoveLine === nextProps.onMoveLine &&
+    prevProps.checkboxAction === nextProps.checkboxAction
   );
 });

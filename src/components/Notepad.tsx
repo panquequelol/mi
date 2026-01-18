@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { motion, AnimatePresence } from "motion/react";
-import { documentAtom, addLineAtom, deleteLineAtom, insertLineAfterAtom, insertLineBeforeAtom, splitLineAtom, moveLineUpAtom, moveLineDownAtom } from "../atoms";
+import { documentAtom, addLineAtom, deleteLineAtom, insertLineAfterAtom, insertLineBeforeAtom, splitLineAtom, moveLineUpAtom, moveLineDownAtom, toggleLineAtom } from "../atoms";
 import { archiveSectionAtom, viewModeAtom } from "../atoms/archive";
 import { settingsAtom, setDarkModeAtom } from "../atoms/settings";
 import { TodoLine } from "./TodoLine";
 import { ArchiveView } from "./ArchiveView";
 import { CommandPalette } from "./CommandPalette";
+import { ContextMenuTrigger } from "./ContextMenu";
+import { CheckboxWithContext } from "./CheckboxWithContext";
 import { commandPaletteOpenAtom, commandsAtom, type Command } from "../atoms/commandPalette";
 import { getCursorOffset, setCursorOffset } from "../utils/cursor";
 import { isPhone } from "../utils/device";
@@ -23,6 +25,7 @@ export const Notepad = () => {
   const insertLineBefore = useSetAtom(insertLineBeforeAtom);
   const splitLine = useSetAtom(splitLineAtom);
   const deleteLine = useSetAtom(deleteLineAtom);
+  const toggleLine = useSetAtom(toggleLineAtom);
   const moveLineUp = useSetAtom(moveLineUpAtom);
   const moveLineDown = useSetAtom(moveLineDownAtom);
   const archiveSection = useSetAtom(archiveSectionAtom);
@@ -42,6 +45,7 @@ export const Notepad = () => {
   const onAnimationCompleteRef = useRef<(() => void) | null>(null);
   const [archivingSection, setArchivingSection] = useState<{ startIndex: number; endIndex: number } | null>(null);
   const isTrimmingRef = useRef(false);
+  const [deletingLines, setDeletingLines] = useState<Set<string>>(new Set());
 
   // Ref for docs that doesn't cause re-renders when accessed
   const docsRef = useRef(docs);
@@ -490,6 +494,22 @@ export const Notepad = () => {
     setViewMode((m) => (m === "active" ? "archive" : "active"));
   }, [setViewMode]);
 
+  // Context menu delete handler - animate first, then delete
+  const handleContextMenuDelete = useCallback((lineId: string) => {
+    // Add to deleting set to trigger exit animation
+    setDeletingLines((prev) => new Set(prev).add(lineId));
+
+    // Actually delete after animation completes
+    setTimeout(() => {
+      deleteLine(lineId);
+      setDeletingLines((prev) => {
+        const next = new Set(prev);
+        next.delete(lineId);
+        return next;
+      });
+    }, 200);
+  }, [deleteLine]);
+
   return (
     <div className="w-full" onKeyDown={handleKeyDown}>
       <CommandPalette />
@@ -497,12 +517,13 @@ export const Notepad = () => {
         <ArchiveView />
       ) : (
         <>
-          <div className="flex flex-col gap-0 group">
+          <div className="flex flex-col gap-0">
             <AnimatePresence>
               {docs.map((line, index) => {
                 const isBeingArchived = archivingSection !== null &&
                   index >= archivingSection.startIndex &&
                   index < archivingSection.endIndex;
+                const isDeleting = deletingLines.has(line.id);
 
                 if (isBeingArchived) {
                   return (
@@ -518,9 +539,49 @@ export const Notepad = () => {
                         onNavigate={handleNavigate}
                         onDeleteAndNavigate={handleDeleteAndNavigate}
                         onMoveLine={handleMoveLine}
-                        updatedAt={line.updatedAt}
+                        checkboxAction={
+                          <CheckboxWithContext
+                            lineId={line.id}
+                            state={line.state}
+                            onToggle={toggleLine}
+                            onDelete={handleContextMenuDelete}
+                            t={t}
+                          />
+                        }
                         t={t}
-                        language={settings.language}
+                        isEmptyDocument={!hasVisibleTodos}
+                        showPlaceholder={!hasVisibleTodos && index === 0}
+                        isAfterLastTodo={index > actualLastNonEmptyIndex}
+                      />
+                    </motion.div>
+                  );
+                }
+
+                if (isDeleting) {
+                  return (
+                    <motion.div
+                      key={line.id}
+                      initial={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0, marginTop: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                    >
+                      <TodoLine
+                        line={line}
+                        index={index}
+                        totalLines={docs.length}
+                        onNavigate={handleNavigate}
+                        onDeleteAndNavigate={handleDeleteAndNavigate}
+                        onMoveLine={handleMoveLine}
+                        checkboxAction={
+                          <CheckboxWithContext
+                            lineId={line.id}
+                            state={line.state}
+                            onToggle={toggleLine}
+                            onDelete={handleContextMenuDelete}
+                            t={t}
+                          />
+                        }
+                        t={t}
                         isEmptyDocument={!hasVisibleTodos}
                         showPlaceholder={!hasVisibleTodos && index === 0}
                         isAfterLastTodo={index > actualLastNonEmptyIndex}
@@ -538,9 +599,62 @@ export const Notepad = () => {
                       onNavigate={handleNavigate}
                       onDeleteAndNavigate={handleDeleteAndNavigate}
                       onMoveLine={handleMoveLine}
-                      updatedAt={line.updatedAt}
+                      checkboxAction={
+                        <ContextMenuTrigger lineId={line.id} onDelete={handleContextMenuDelete} t={t}>
+                          <motion.div
+                            className="cursor-pointer select-none min-w-[calc(var(--base-font-size)*1.25)] inline-flex items-center justify-center"
+                            style={{ color: "var(--color-text-light)" }}
+                            onClick={() => toggleLine(line.id)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 20 20"
+                              fill="none"
+                              className="block"
+                              style={{ width: "calc(var(--base-font-size)*1.25)", height: "calc(var(--base-font-size)*1.25)" }}
+                            >
+                              <motion.rect
+                                x="2"
+                                y="2"
+                                width="16"
+                                height="16"
+                                rx="3"
+                                stroke="var(--color-text-done)"
+                                strokeWidth="var(--stroke-width)"
+                                initial={false}
+                                transition={{ duration: 0.3 }}
+                              />
+                              <motion.g
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{
+                                  scale: line.state === "DONE" ? 1 : 0,
+                                  opacity: line.state === "DONE" ? 1 : 0,
+                                }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 200,
+                                  damping: 12,
+                                  delay: line.state === "DONE" ? 0.05 : 0,
+                                }}
+                                style={{ transformOrigin: "10px 10px" }}
+                              >
+                                <path
+                                  d="M6 10 L9 13 L14 7"
+                                  stroke="var(--color-text-done)"
+                                  strokeWidth="var(--stroke-width)"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  fill="none"
+                                />
+                              </motion.g>
+                            </svg>
+                          </motion.div>
+                        </ContextMenuTrigger>
+                      }
                       t={t}
-                      language={settings.language}
                       isEmptyDocument={!hasVisibleTodos}
                       showPlaceholder={!hasVisibleTodos && index === 0}
                       isAfterLastTodo={index > actualLastNonEmptyIndex}
