@@ -74,6 +74,13 @@ export const TodoLine = memo(({ line, index, totalLines, onNavigate, onDeleteAnd
     const editor = editorRef.current;
     if (!editor) return;
 
+    // Shift + Super + K -> delete current line
+    if (e.key === "k" && e.metaKey && e.shiftKey) {
+      e.preventDefault();
+      onDeleteAndNavigate(index);
+      return;
+    }
+
     if (e.key === "Backspace" && !line.text) {
       e.preventDefault();
       onDeleteAndNavigate(index);

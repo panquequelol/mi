@@ -437,19 +437,27 @@ export const Notepad = () => {
     const lineToDelete = docs[currentIndex];
     if (!lineToDelete) return;
 
+    const isLastLine = docs.length === 1;
+
+    if (isLastLine) {
+      deleteLine(lineToDelete.id);
+      const newLineId = addLine("");
+      pendingFocusRef.current = { lineId: newLineId, offset: 0 };
+      return;
+    }
+
     const targetIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-    const targetLine = targetIndex < docs.length ? docs[targetIndex] : null;
+    const targetLine = docs[targetIndex];
 
     deleteLine(lineToDelete.id);
 
     if (targetLine) {
-      const targetText = targetLine.text;
       pendingFocusRef.current = {
         lineId: targetLine.id,
-        offset: targetText.length,
+        offset: targetLine.text.length,
       };
     }
-  }, [docs, deleteLine]);
+  }, [docs, deleteLine, addLine]);
 
   const movedLineIdRef = useRef<string | null>(null);
 
